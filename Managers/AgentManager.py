@@ -115,7 +115,9 @@ class AgentManager:
             klass = RandomAgent.RandomAgent
         else:
             components = module_class.split('.')
-            module = __import__('Agents.' + components[0], fromlist=[components[1]])
-            klass = getattr(module, components[1])
+            class_name = components[-1]
+            module_path = 'Agents.' + '.'.join(components[:-1])
+            module = __import__(module_path, fromlist=[class_name])
+            klass = getattr(module, class_name)
 
         return klass
