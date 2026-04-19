@@ -1,0 +1,6 @@
+Agente,Victorias,Puntos,Partidas,Ratio Victorias,Media Puntos,Puesto Medio
+Agents.ThanosCityFocusAgent.ThanosCityFocusAgent,20275,246132,28800,0.7040,8.55,1.49
+Agents.TradePriorityBuilderAgent_v2.TradePriorityBuilderAgent_v2,15427,217419,28800,0.5357,7.55,1.85
+Agents.PriorityBuilderAgent.PriorityBuilderAgent,8912,177435,28800,0.3094,6.16,2.26
+Agents.CardRoadThiefAgent_v2.CardRoadThiefAgent_v2,5852,140672,28800,0.2032,4.88,2.64
+Agents.heuristicInitialPlacement.heuristicInitialPlacement,2156,115537,28800,0.0749,4.01,2.85

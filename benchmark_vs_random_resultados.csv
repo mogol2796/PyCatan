@@ -1,0 +1,6 @@
+Agente,Victorias,Puntos,Partidas,Ratio Victorias,Media Puntos,Puesto Medio
+heuristicInitialPlacement,862,22168,4000,0.2155,5.54,2.52
+PriorityBuilderAgent,3013,36185,4000,0.7532,9.05,1.41
+CardRoadThiefAgent_v2,1839,28648,4000,0.4597,7.16,1.93
+TradePriorityBuilderAgent_v2,3782,40198,4000,0.9455,10.05,1.09
+ThanosCityFocusAgent,3780,39733,4000,0.9450,9.93,1.08

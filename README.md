@@ -26,6 +26,51 @@ To run the simulator, use the `main` module. Specify the agents to be executed a
 
 After each game, the result is displayed in the console and the game trace is saved in JSON format in the `Traces` folder.
 
+## LLM Agents (Experimental)
+
+This project can run agents that query an external LLM to decide moves. A reference implementation is included as `Agents/LLMJsonAgent.py`.
+
+### Providers
+
+Select the backend with `LLM_PROVIDER`:
+
+- *(default)* `openai` / `openai_compat`: OpenAI-compatible Chat Completions (also works with UPV gateways and Ollama OpenAI-compat)
+- `ollama`: native Ollama `http://localhost:11434/api/chat`
+- `bedrock`: AWS Bedrock Runtime (Converse API)
+
+### Configuration
+
+Common env vars:
+
+- `LLM_MODEL` (model name / id)
+- Optional: `LLM_TIMEOUT_S`, `LLM_TEMPERATURE`, `LLM_MAX_TOKENS`
+- Optional: `LLM_LOG_DIR` (writes one `.jsonl` log file per process)
+- Optional: `LLM_BUILD_ACTIONS` (build actions per turn, default `3`)
+- Optional: `LLM_START_CANDIDATES` (initial placement candidates, default `12`)
+
+OpenAI-compatible (`LLM_PROVIDER=openai_compat`):
+
+- `LLM_API_BASE` (e.g. `https://api.openai.com/v1`, or your UPV gateway base ending in `/v1`)
+- Optional/required depending on provider: `LLM_API_KEY`
+
+Ollama native (`LLM_PROVIDER=ollama`):
+
+- `OLLAMA_BASE_URL` (defaults to `http://localhost:11434`)
+- `OLLAMA_MODEL` (or `LLM_MODEL`)
+
+AWS Bedrock (`LLM_PROVIDER=bedrock`):
+
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_SESSION_TOKEN`
+- `AWS_REGION` (or `BEDROCK_REGION`)
+- `BEDROCK_MODEL_ID` (or `LLM_MODEL`)
+
+### Run with the LLM agent
+
+1. Run `python main.py`
+2. When asked for the agent module/class, use `LLMJsonAgent.LLMJsonAgent` for the seat(s) you want.
+
+Note: LLM-based games will be slower and may hit rate limits/cost, especially if you run large benchmarks with multiprocessing.
+
 ## Visualizing Results
 
 To visualize game results:
