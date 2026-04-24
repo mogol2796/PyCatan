@@ -1,4 +1,6 @@
+import json
 import os
+import time
 
 from Agents.LLMClient import create_chat_client_from_env
 from Agents.RandomAgent import RandomAgent
@@ -67,6 +69,55 @@ class LLMJsonAgent(RandomAgent):
             self._max_build_actions = 3
             self._start_candidates = 12
 
+        self._prompt_tag = (
+            kwargs.get("prompt_tag")
+            or os.getenv("LLM_PROMPT_TAG")
+            or ""
+        ).strip()
+
+        default_start_system = (
+            "You play Settlers of Catan. Return ONLY valid JSON. No markdown, no extra text. "
+            "Choose a legal starting placement from the provided candidates."
+        )
+        default_build_system = (
+            "You control a Catan agent. Return ONLY valid JSON. No markdown, no extra text. "
+            "Propose a short build plan using ONLY the legal moves given. "
+            "If you want to stop building, return an action with building='none'."
+        )
+
+        self._start_system_prompt = (
+            kwargs.get("start_system_prompt")
+            or os.getenv("LLM_START_SYSTEM_PROMPT")
+            or default_start_system
+        )
+        self._build_system_prompt = (
+            kwargs.get("build_system_prompt")
+            or os.getenv("LLM_BUILD_SYSTEM_PROMPT")
+            or default_build_system
+        )
+
+    def _log_event(self, payload):
+        log_dir = getattr(self._llm, "log_dir", None) or (os.getenv("LLM_LOG_DIR") or "").strip()
+        if not log_dir:
+            return
+
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+            file_path = os.path.join(log_dir, f"llm_agent_events_{os.getpid()}.jsonl")
+            enriched = {
+                "ts": time.time(),
+                "pid": os.getpid(),
+                "agent_id": int(self.id),
+                "agent": type(self).__name__,
+                "prompt_tag": self._prompt_tag,
+            }
+            if isinstance(payload, dict):
+                enriched.update(payload)
+            with open(file_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(enriched, ensure_ascii=False, separators=(",", ":")) + "\n")
+        except Exception:
+            return
+
     def on_turn_start(self):
         self._build_queue = []
         self._build_planned_this_turn = False
@@ -102,29 +153,59 @@ class LLMJsonAgent(RandomAgent):
                 }
             )
 
-        system = (
-            "You play Settlers of Catan. Return ONLY valid JSON. No markdown, no extra text. "
-            "Choose a legal starting placement from the provided candidates."
-        )
+        system = self._start_system_prompt
         user = {
             "phase": "initial_placement",
             "player_id": int(self.id),
+            "prompt_tag": self._prompt_tag,
             "candidates": candidate_objs,
             "output_schema": {"node_id": "int", "road_to": "int"},
         }
         decision = self._llm.chat_json(system, user)
         if not isinstance(decision, dict):
+            self._log_event(
+                {
+                    "event": "llm_invalid_output",
+                    "phase": "initial_placement",
+                    "reason": "not_a_dict",
+                    "decision": decision,
+                }
+            )
             return super().on_game_start(board_instance)
 
         try:
             node_id = int(decision.get("node_id"))
             road_to = int(decision.get("road_to"))
         except Exception:
+            self._log_event(
+                {
+                    "event": "llm_invalid_output",
+                    "phase": "initial_placement",
+                    "reason": "missing_fields",
+                    "decision": decision,
+                }
+            )
             return super().on_game_start(board_instance)
 
         if node_id not in valid_nodes:
+            self._log_event(
+                {
+                    "event": "llm_illegal_move",
+                    "phase": "initial_placement",
+                    "reason": "node_not_valid",
+                    "decision": {"node_id": node_id, "road_to": road_to},
+                }
+            )
             return super().on_game_start(board_instance)
         if road_to not in board_instance.nodes[node_id]["adjacent"]:
+            self._log_event(
+                {
+                    "event": "llm_illegal_move",
+                    "phase": "initial_placement",
+                    "reason": "road_not_adjacent",
+                    "decision": {"node_id": node_id, "road_to": road_to},
+                }
+            )
             return super().on_game_start(board_instance)
 
         return node_id, road_to
@@ -141,11 +222,14 @@ class LLMJsonAgent(RandomAgent):
         if not self._build_planned_this_turn:
             self._build_planned_this_turn = True
             plan = self._request_build_plan(board_instance)
-            if plan:
+            if plan is not None:
                 self._build_queue = plan
-                return self._build_queue.pop(0)
+                if self._build_queue:
+                    return self._build_queue.pop(0)
+                return None
 
-        return super().on_build_phase(board_instance)
+        # If we've already requested a plan this turn (or executed it), stop building.
+        return None
 
     def _request_build_plan(self, board_instance):
         can_afford = {
@@ -164,14 +248,11 @@ class LLMJsonAgent(RandomAgent):
             ],
         }
 
-        system = (
-            "You control a Catan agent. Return ONLY valid JSON. No markdown, no extra text. "
-            "Propose a short build plan using ONLY the legal moves given. "
-            "If you want to stop building, return an action with building='none'."
-        )
+        system = self._build_system_prompt
         user = {
             "phase": "build_plan",
             "player_id": int(self.id),
+            "prompt_tag": self._prompt_tag,
             "hand": {
                 "cereal": int(self.hand.resources.cereal),
                 "mineral": int(self.hand.resources.mineral),
@@ -191,10 +272,26 @@ class LLMJsonAgent(RandomAgent):
 
         decision = self._llm.chat_json(system, user)
         if not isinstance(decision, dict):
+            self._log_event(
+                {
+                    "event": "llm_invalid_output",
+                    "phase": "build_plan",
+                    "reason": "not_a_dict",
+                    "decision": decision,
+                }
+            )
             return None
 
         actions = decision.get("actions")
         if not isinstance(actions, list):
+            self._log_event(
+                {
+                    "event": "llm_invalid_output",
+                    "phase": "build_plan",
+                    "reason": "actions_not_list",
+                    "decision": decision,
+                }
+            )
             return None
 
         city_nodes = set(valid["city_nodes"])
@@ -202,11 +299,13 @@ class LLMJsonAgent(RandomAgent):
         road_edges = {(e["node_id"], e["road_to"]) for e in valid["road_edges"]}
 
         planned = []
+        saw_explicit_stop = False
         for action in actions[: self._max_build_actions]:
             if not isinstance(action, dict):
                 continue
             building = str(action.get("building", "")).strip().lower()
             if building in ("none", "pass", ""):
+                saw_explicit_stop = True
                 break
 
             if building == BuildConstants.CARD:
@@ -247,4 +346,14 @@ class LLMJsonAgent(RandomAgent):
                     )
                 continue
 
-        return planned or None
+        if not planned:
+            self._log_event(
+                {
+                    "event": "llm_pass" if saw_explicit_stop else "llm_no_valid_actions",
+                    "phase": "build_plan",
+                    "decision": decision,
+                }
+            )
+            return []
+
+        return planned
