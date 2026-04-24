@@ -1,0 +1,30 @@
+{
+  "run_id": "2026-04-24_19-43-48",
+  "agent": "LLMJsonAgent.LLMJsonAgent",
+  "agent_label": "LLMJsonAgent (prompt=baseline_v1)",
+  "llm": {
+    "provider": "",
+    "model": "",
+    "base_url": "",
+    "timeout_s": "",
+    "temperature": "",
+    "max_tokens": "",
+    "json_response_format": "",
+    "log_dir": "llm_logs\\2026-04-24_19-43-48",
+    "prompt_tag": "baseline_v1",
+    "prompt_profile": "baseline_v1",
+    "start_system_prompt": "You play Settlers of Catan. Return ONLY valid JSON. No markdown, no extra text. Choose a legal starting placement from the provided candidates.",
+    "build_system_prompt": "You control a Catan agent. Return ONLY valid JSON. No markdown, no extra text. Propose a short build plan using ONLY the legal moves given. If you want to stop building, return an action with building='none'.",
+    "start_prompt_sha256": "3d829d8fa370edb30f9fd879b8a326c9b7f41a110e73af44b406d6abbce8b812",
+    "build_prompt_sha256": "5497c2c283ea05f26acd365c83fc27392925c5f480133b0c24ee090df9611c10"
+  },
+  "benchmark": {
+    "matches_per_position": 1,
+    "positions": [
+      0
+    ],
+    "max_rounds": 2,
+    "seed": null,
+    "store_trace": false
+  }
+}
