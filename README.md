@@ -64,12 +64,102 @@ AWS Bedrock (`LLM_PROVIDER=bedrock`):
 - `AWS_REGION` (or `BEDROCK_REGION`)
 - `BEDROCK_MODEL_ID` (or `LLM_MODEL`)
 
+### How to set environment variables
+
+The LLM agents read these values from your environment at runtime. If no LLM client can be created (missing/invalid config),
+`LLMJsonAgent` falls back to `RandomAgent` behaviour.
+
+#### PowerShell (Windows)
+
+Ollama (native):
+
+```powershell
+$env:LLM_PROVIDER = "ollama"
+$env:OLLAMA_MODEL = "llama3.1:8b"
+# Optional:
+$env:OLLAMA_BASE_URL = "http://localhost:11434"
+$env:LLM_TIMEOUT_S = "60"
+$env:LLM_TEMPERATURE = "0.2"
+$env:LLM_MAX_TOKENS = "512"
+
+python main.py
+```
+
+OpenAI-compatible:
+
+```powershell
+$env:LLM_PROVIDER = "openai_compat"
+$env:LLM_API_BASE = "https://api.openai.com/v1"
+$env:LLM_API_KEY = "<your-api-key>"
+$env:LLM_MODEL = "<model-id>"
+
+python main.py
+```
+
+To persist variables for future terminals on Windows (requires opening a new terminal afterwards):
+
+```powershell
+setx LLM_PROVIDER "ollama"
+setx OLLAMA_MODEL "llama3.1:8b"
+```
+
+#### CMD.exe (Windows)
+
+```bat
+set LLM_PROVIDER=ollama
+set OLLAMA_MODEL=llama3.1:8b
+python main.py
+```
+
+#### Bash/Zsh (Linux/macOS)
+
+```bash
+export LLM_PROVIDER=ollama
+export OLLAMA_MODEL=llama3.1:8b
+python main.py
+```
+
+Tip: avoid committing secrets. Keep API keys out of the repository (use your shell profile, a secrets manager, or CI secrets).
+
 ### Run with the LLM agent
 
 1. Run `python main.py`
 2. When asked for the agent module/class, use `LLMJsonAgent.LLMJsonAgent` for the seat(s) you want.
 
 Note: LLM-based games will be slower and may hit rate limits/cost, especially if you run large benchmarks with multiprocessing.
+
+### Run LLM benchmarks (low-cost)
+
+This repo includes lightweight benchmark scripts that run a small number of games and write CSV outputs.
+
+LLM vs 3 Random agents:
+
+```bash
+python benchmark_vs_random_llm.py --agent LLMJsonAgent.LLMJsonAgent --matches 1 --positions 0 1 2 3
+```
+
+LLM vs standard agents (3 opponents sampled from a pool):
+
+```bash
+python benchmark_vs_estandar_llm.py --agent LLMJsonAgent.LLMJsonAgent --matches 1 --opponent-sets 1 --positions 0 1 2 3 --prompt baseline_v1
+```
+
+Fix the 3 opponents explicitly (always the same trio):
+
+```bash
+python benchmark_vs_estandar_llm.py --opponents AdrianHerasAgent.AdrianHerasAgent AlexPastorAgent.AlexPastorAgent SigmaAgent.SigmaAgent --matches 1 --positions 0 1 2 3 --prompt baseline_v1
+```
+
+Prompt profiles:
+
+- Choose with `--prompt <name>` (see `PROMPT_PROFILES` at the top of each benchmark script).
+- Use `--prompt-tag <tag>` if you want a custom label saved to logs/CSVs (defaults to the prompt name).
+
+Outputs (by default):
+
+- `benchmark_vs_llm_vs_estandar_resultados.csv` / `benchmark_vs_llm_vs_estandar_detalle.csv`
+- `benchmark_vs_llm_runs.csv` (append-only run-level summary)
+- `llm_logs/<run_id>/` (request/response logs and `run_config.json`)
 
 ## Visualizing Results
 

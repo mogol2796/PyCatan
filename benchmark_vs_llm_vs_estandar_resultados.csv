@@ -1,0 +1,2 @@
+Agente,Victorias,Puntos,Partidas,Ratio Victorias,Media Puntos,Puesto Medio
+LLMJsonAgent (ollama llama3.1:8b prompt=baseline_v1 bench=estandar oppsets=1),2,28,4,0.5000,7.00,2.25
