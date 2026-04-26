@@ -173,19 +173,68 @@ class LLMJsonAgent(RandomAgent):
             )
             return super().on_game_start(board_instance)
 
+        salvaged = False
+        salvage_source = ""
         try:
             node_id = int(decision.get("node_id"))
             road_to = int(decision.get("road_to"))
         except Exception:
-            self._log_event(
-                {
-                    "event": "llm_invalid_output",
-                    "phase": "initial_placement",
-                    "reason": "missing_fields",
-                    "decision": decision,
-                }
-            )
-            return super().on_game_start(board_instance)
+            node_id = None
+            road_to = None
+
+            # Some smaller models tend to "select" a candidate by returning a JSON
+            # object that contains a single-element candidates[] array, instead of
+            # returning node_id/road_to directly. Try to salvage that.
+            candidates_resp = decision.get("candidates")
+            if isinstance(candidates_resp, list) and candidates_resp:
+                first = candidates_resp[0]
+                if isinstance(first, dict):
+                    try:
+                        node_id = int(first.get("node_id"))
+                    except Exception:
+                        node_id = None
+
+                    adj = first.get("adjacent")
+                    if isinstance(adj, list) and adj:
+                        try:
+                            road_to = int(adj[0])
+                        except Exception:
+                            road_to = None
+
+                    if node_id is not None and road_to is not None:
+                        salvaged = True
+                        salvage_source = "from_candidates"
+
+            # Another common partial output: only node_id.
+            if node_id is None:
+                try:
+                    node_id = int(decision.get("node_id"))
+                except Exception:
+                    node_id = None
+
+            if node_id is not None and road_to is None:
+                try:
+                    adj = board_instance.nodes[node_id].get("adjacent", [])
+                except Exception:
+                    adj = []
+                if isinstance(adj, list) and adj:
+                    try:
+                        road_to = int(adj[0])
+                        salvaged = True
+                        salvage_source = salvage_source or "node_id_only"
+                    except Exception:
+                        road_to = None
+
+            if node_id is None or road_to is None:
+                self._log_event(
+                    {
+                        "event": "llm_invalid_output",
+                        "phase": "initial_placement",
+                        "reason": "missing_fields",
+                        "decision": decision,
+                    }
+                )
+                return super().on_game_start(board_instance)
 
         if node_id not in valid_nodes:
             self._log_event(
@@ -208,6 +257,16 @@ class LLMJsonAgent(RandomAgent):
             )
             return super().on_game_start(board_instance)
 
+        if salvaged:
+            self._log_event(
+                {
+                    "event": "llm_salvaged_output",
+                    "phase": "initial_placement",
+                    "source": salvage_source,
+                    "decision_keys": sorted(list(decision.keys())),
+                    "salvaged": {"node_id": node_id, "road_to": road_to},
+                }
+            )
         return node_id, road_to
 
     def on_build_phase(self, board_instance):
@@ -239,13 +298,20 @@ class LLMJsonAgent(RandomAgent):
             "card": bool(self.hand.resources.has_more(BuildConstants.CARD)),
         }
 
+        if not any(can_afford.values()):
+            return []
+
         valid = {
-            "city_nodes": [int(n) for n in board_instance.valid_city_nodes(self.id)],
-            "town_nodes": [int(n) for n in board_instance.valid_town_nodes(self.id)],
-            "road_edges": [
-                {"node_id": int(e["starting_node"]), "road_to": int(e["finishing_node"])}
-                for e in board_instance.valid_road_nodes(self.id)
-            ],
+            "city_nodes": [int(n) for n in board_instance.valid_city_nodes(self.id)] if can_afford["city"] else [],
+            "town_nodes": [int(n) for n in board_instance.valid_town_nodes(self.id)] if can_afford["town"] else [],
+            "road_edges": (
+                [
+                    {"node_id": int(e["starting_node"]), "road_to": int(e["finishing_node"])}
+                    for e in board_instance.valid_road_nodes(self.id)
+                ]
+                if can_afford["road"]
+                else []
+            ),
         }
 
         system = self._build_system_prompt
