@@ -1,0 +1,2 @@
+run_id,game_index,position,victory,winner,draw,timeout,rounds_played,duration_s,agent_points,agent_rank,max_vp,tie_for_first,has_victory_condition,vp_J0,vp_J1,vp_J2,vp_J3,trace_dir
+2026-04-26_17-52-48,1,0,0,,1,1,80,101.148,4,2,6,0,0,4,4,6,2,

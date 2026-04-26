@@ -1,0 +1,3 @@
+{"ts":1777221653.2968976,"pid":2444,"agent_id":0,"agent":"LLMJsonAgent","prompt_tag":"baseline_v1","event":"llm_invalid_output","phase":"initial_placement","reason":"not_a_dict","decision":null}
+{"ts":1777221657.4835074,"pid":2444,"agent_id":0,"agent":"LLMJsonAgent","prompt_tag":"baseline_v1","event":"llm_invalid_output","phase":"initial_placement","reason":"not_a_dict","decision":null}
+{"ts":1777221661.643467,"pid":2444,"agent_id":0,"agent":"LLMJsonAgent","prompt_tag":"baseline_v1","event":"llm_invalid_output","phase":"initial_placement","reason":"not_a_dict","decision":null}

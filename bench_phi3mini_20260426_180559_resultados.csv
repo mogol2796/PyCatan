@@ -1,0 +1,2 @@
+Agente,Victorias,Puntos,Partidas,Ratio Victorias,Media Puntos,Puesto Medio
+LLMJsonAgent (ollama phi3:mini prompt=baseline_v1),5,66,8,0.6250,8.25,1.50

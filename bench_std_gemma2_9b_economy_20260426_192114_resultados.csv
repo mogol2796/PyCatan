@@ -1,0 +1,2 @@
+Agente,Victorias,Puntos,Partidas,Ratio Victorias,Media Puntos,Puesto Medio
+LLMJsonAgent (ollama gemma2:9b prompt=economy_v1 bench=estandar oppsets=1),2,27,4,0.5000,6.75,2.00

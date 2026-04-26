@@ -1,0 +1,5 @@
+run_id,game_index,opponent_set_index,position,seat_J0_agent,seat_J1_agent,seat_J2_agent,seat_J3_agent,victory,winner,draw,timeout,rounds_played,duration_s,agent_points,agent_rank,max_vp,tie_for_first,has_victory_condition,vp_J0,vp_J1,vp_J2,vp_J3,trace_dir
+2026-04-26_19-21-14,1,1,0,LLMJsonAgent,AdrianHerasAgent,AlexPastorAgent,SigmaAgent,1,J0,0,0,34,66.965,10,1,10,0,1,10,2,4,7,
+2026-04-26_19-21-14,2,1,1,AdrianHerasAgent,LLMJsonAgent,AlexPastorAgent,SigmaAgent,0,J0,0,0,27,51.703,3,2,10,0,1,10,3,2,2,
+2026-04-26_19-21-14,3,1,2,AdrianHerasAgent,AlexPastorAgent,LLMJsonAgent,SigmaAgent,0,J3,0,0,40,48.084,4,4,10,0,1,5,6,4,10,
+2026-04-26_19-21-14,4,1,3,AdrianHerasAgent,AlexPastorAgent,SigmaAgent,LLMJsonAgent,1,J3,0,0,37,71.212,10,1,10,0,1,2,4,4,10,

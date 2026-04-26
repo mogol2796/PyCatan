@@ -1,0 +1,1 @@
+{"ts":1777224241.6310062,"pid":2256,"agent_id":2,"agent":"LLMJsonAgent","prompt_tag":"economy_v1","event":"llm_pass","phase":"build_plan","decision":{"actions":[{"building":"none"}]}}

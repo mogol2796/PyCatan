@@ -41,6 +41,24 @@ def _extract_first_json_object(text):
         return None
 
 
+def _to_int(value):
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def _normalize_usage(prompt_tokens=None, completion_tokens=None, total_tokens=None):
+    pt = _to_int(prompt_tokens)
+    ct = _to_int(completion_tokens)
+    tt = _to_int(total_tokens)
+    if tt is None and (pt is not None or ct is not None):
+        tt = (pt or 0) + (ct or 0)
+    if pt is None and ct is None and tt is None:
+        return None
+    return {"prompt_tokens": pt, "completion_tokens": ct, "total_tokens": tt}
+
+
 class OpenAIChatCompletionsClient:
     """
     Minimal OpenAI-compatible Chat Completions HTTP client.
@@ -142,12 +160,21 @@ class OpenAIChatCompletionsClient:
                 .get("content", "")
             )
             result = _extract_first_json_object(content)
+            usage_raw = parsed.get("usage")
+            usage = None
+            if isinstance(usage_raw, dict):
+                usage = _normalize_usage(
+                    prompt_tokens=usage_raw.get("prompt_tokens"),
+                    completion_tokens=usage_raw.get("completion_tokens"),
+                    total_tokens=usage_raw.get("total_tokens"),
+                )
             self._log(
                 {
                     "t_ms": elapsed_ms,
                     "request": {"system": system_prompt, "user": user_payload},
                     "raw_content": content,
                     "parsed_json": result,
+                    "usage": usage,
                 }
             )
             return result
@@ -273,12 +300,18 @@ class OllamaChatClient:
             parsed = json.loads(raw)
             content = parsed.get("message", {}).get("content", "")
             result = _extract_first_json_object(content)
+            usage = _normalize_usage(
+                prompt_tokens=parsed.get("prompt_eval_count"),
+                completion_tokens=parsed.get("eval_count"),
+                total_tokens=None,
+            )
             self._log(
                 {
                     "t_ms": elapsed_ms,
                     "request": {"system": system_prompt, "user": user_payload},
                     "raw_content": content,
                     "parsed_json": result,
+                    "usage": usage,
                 }
             )
             return result
@@ -496,12 +529,21 @@ class BedrockConverseClient:
                     text = first.get("text", "") or ""
 
             result = _extract_first_json_object(text)
+            usage_raw = parsed.get("usage")
+            usage = None
+            if isinstance(usage_raw, dict):
+                usage = _normalize_usage(
+                    prompt_tokens=usage_raw.get("inputTokens"),
+                    completion_tokens=usage_raw.get("outputTokens"),
+                    total_tokens=usage_raw.get("totalTokens"),
+                )
             self._log(
                 {
                     "t_ms": elapsed_ms,
                     "request": {"system": system_prompt, "user": user_payload},
                     "raw_text": text,
                     "parsed_json": result,
+                    "usage": usage,
                 }
             )
             return result

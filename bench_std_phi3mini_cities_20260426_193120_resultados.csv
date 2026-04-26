@@ -1,0 +1,2 @@
+Agente,Victorias,Puntos,Partidas,Ratio Victorias,Media Puntos,Puesto Medio
+LLMJsonAgent (ollama phi3:mini prompt=cities_cards_v1 bench=estandar oppsets=1),0,9,4,0.0000,2.25,3.50

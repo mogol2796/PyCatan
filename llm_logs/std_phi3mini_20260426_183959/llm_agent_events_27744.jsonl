@@ -1,0 +1,1 @@
+{"ts":1777221607.3409257,"pid":27744,"agent_id":0,"agent":"LLMJsonAgent","prompt_tag":"baseline_v1","event":"llm_salvaged_output","phase":"initial_placement","source":"from_candidates","decision_keys":["candidates","output_schema","phase","player_id","prompt_tag"],"salvaged":{"node_id":13,"road_to":12}}

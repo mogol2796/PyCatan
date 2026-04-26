@@ -1,0 +1,54 @@
+{
+  "run_id": "2026-04-26_18-50-04",
+  "agent": "LLMJsonAgent.LLMJsonAgent",
+  "agent_label": "LLMJsonAgent (ollama gemma2:9b prompt=baseline_v1 bench=estandar oppsets=1)",
+  "llm": {
+    "provider": "ollama",
+    "model": "gemma2:9b",
+    "base_url": "",
+    "timeout_s": "",
+    "temperature": "0.0",
+    "max_tokens": "256",
+    "json_response_format": "1",
+    "log_dir": "llm_logs\\2026-04-26_18-50-04",
+    "prompt_tag": "baseline_v1",
+    "prompt_profile": "baseline_v1",
+    "start_system_prompt": "You play Settlers of Catan. Return ONLY a JSON object with exactly these keys: node_id, road_to. Do not include any other keys and do not repeat the input. node_id must be one of candidates[].node_id. road_to must be one of candidates[].adjacent for the chosen node. Example: {\"node_id\": 24, \"road_to\": 23}.",
+    "build_system_prompt": "You control a Catan agent. Return ONLY a JSON object with exactly one key: actions (a list). Do not include any other keys and do not repeat the input. Propose up to max_actions actions. Use ONLY legal_moves and ONLY actions you can afford (see can_afford). If can_afford[building] is false, do not propose that building. For 'city'/'town', choose node_id from the corresponding list. For 'road', choose a (node_id, road_to) pair exactly from legal_moves.road_edges. For 'card', use {\"building\":\"card\"} (no node_id/road_to needed). If you cannot build anything, return {\"actions\":[{\"building\":\"none\"}]}.",
+    "start_prompt_sha256": "0f85d4c1dd0a89ed861926d3984bd5af1dc9f5d1140fc1b5757a2b78e4916c30",
+    "build_prompt_sha256": "7e0655280583da0539b2e72af4aa3d6b2bf81de76d3db436c960298beca8e442"
+  },
+  "benchmark": {
+    "matches_per_position": 1,
+    "positions": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "max_rounds": 200,
+    "seed": null,
+    "store_trace": false,
+    "opponents_mode": "fixed",
+    "opponent_pool": [
+      "Agents.RandomAgent.RandomAgent",
+      "Agents.AdrianHerasAgent.AdrianHerasAgent",
+      "Agents.AlexPastorAgent.AlexPastorAgent",
+      "Agents.AlexPelochoJaimeAgent.AlexPelochoJaimeAgent",
+      "Agents.CarlesZaidaAgent.CarlesZaidaAgent",
+      "Agents.CrabisaAgent.CrabisaAgent",
+      "Agents.EdoAgent.EdoAgent",
+      "Agents.PabloAleixAlexAgent.PabloAleixAlexAgent",
+      "Agents.SigmaAgent.SigmaAgent",
+      "Agents.TristanAgent.TristanAgent"
+    ],
+    "opponent_sets": [
+      [
+        "Agents.AdrianHerasAgent.AdrianHerasAgent",
+        "Agents.AlexPastorAgent.AlexPastorAgent",
+        "Agents.SigmaAgent.SigmaAgent"
+      ]
+    ],
+    "shuffle_opponents": false
+  }
+}
