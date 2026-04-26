@@ -46,6 +46,9 @@ PROMPT_PROFILES = {
         "start_system_prompt": (
             "You play Settlers of Catan. Return ONLY a JSON object with exactly these keys: node_id, road_to. "
             "Do not include any other keys and do not repeat the input. "
+            "node_id must be one of candidates[].node_id. "
+            "road_to must be one of candidates[].adjacent for the chosen node. "
+            "Example: {\"node_id\": 24, \"road_to\": 23}. "
             "Choose a legal starting placement from the provided candidates. "
             "Prefer high total dice weight (sum of terrains[].w), avoid desert, and prefer diversity of terrain types. "
             "Prefer a good harbor if coastal (harbor != -1). "
@@ -55,15 +58,22 @@ PROMPT_PROFILES = {
         "build_system_prompt": (
             "You control a Catan agent. Return ONLY a JSON object with exactly one key: actions (a list). "
             "Do not include any other keys and do not repeat the input. "
-            "Propose up to max_actions actions using ONLY legal_moves and only when can_afford is true. "
-            "Economy focus: prefer building a town, then a city, then a road, then a card; otherwise stop with "
-            "building='none'."
+            "Propose up to max_actions actions. Use ONLY legal_moves and ONLY actions you can afford (see can_afford). "
+            "If can_afford[building] is false, do not propose that building. "
+            "For 'city'/'town', choose node_id from the corresponding list. "
+            "For 'road', choose a (node_id, road_to) pair exactly from legal_moves.road_edges. "
+            "For 'card', use {\"building\":\"card\"} (no node_id/road_to needed). "
+            "If you cannot build anything, return {\"actions\":[{\"building\":\"none\"}]}. "
+            "Economy focus: prefer building a town, then a city, then a road, then a card."
         ),
     },
     "cities_cards_v1": {
         "start_system_prompt": (
             "You play Settlers of Catan. Return ONLY a JSON object with exactly these keys: node_id, road_to. "
             "Do not include any other keys and do not repeat the input. "
+            "node_id must be one of candidates[].node_id. "
+            "road_to must be one of candidates[].adjacent for the chosen node. "
+            "Example: {\"node_id\": 24, \"road_to\": 23}. "
             "Choose a legal starting placement from the provided candidates. "
             "City/dev-card focus: prefer candidates that include mineral (terrain_type=1) and wool (terrain_type=4) "
             "with high dice weight (terrains[].w). Avoid desert. "
@@ -74,9 +84,13 @@ PROMPT_PROFILES = {
         "build_system_prompt": (
             "You control a Catan agent. Return ONLY a JSON object with exactly one key: actions (a list). "
             "Do not include any other keys and do not repeat the input. "
-            "Propose up to max_actions actions using ONLY legal_moves and only when can_afford is true. "
-            "City/dev-card focus: prefer building a city, then buying a card, then building a town, then a road; "
-            "otherwise stop with building='none'."
+            "Propose up to max_actions actions. Use ONLY legal_moves and ONLY actions you can afford (see can_afford). "
+            "If can_afford[building] is false, do not propose that building. "
+            "For 'city'/'town', choose node_id from the corresponding list. "
+            "For 'road', choose a (node_id, road_to) pair exactly from legal_moves.road_edges. "
+            "For 'card', use {\"building\":\"card\"} (no node_id/road_to needed). "
+            "If you cannot build anything, return {\"actions\":[{\"building\":\"none\"}]}. "
+            "City/dev-card focus: prefer building a city, then buying a card, then building a town, then a road."
         ),
     },
 }
