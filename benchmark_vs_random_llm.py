@@ -270,9 +270,14 @@ def _collect_llm_stats(log_dir):
         "calls_total": 0,
         "calls_initial_placement": 0,
         "calls_build_plan": 0,
+        "calls_with_tokens": 0,
         "errors_total": 0,
         "latency_ms_avg": None,
         "latency_ms_p95": None,
+        "prompt_tokens_total": 0,
+        "completion_tokens_total": 0,
+        "total_tokens_total": 0,
+        "total_tokens_avg": None,
         "invalid_output": 0,
         "illegal_move": 0,
         "no_valid_actions": 0,
@@ -293,6 +298,27 @@ def _collect_llm_stats(log_dir):
                 if isinstance(t_ms, int):
                     latencies.append(t_ms)
                 stats["calls_total"] += 1
+
+                usage = row.get("usage")
+                if isinstance(usage, dict):
+                    pt = usage.get("prompt_tokens")
+                    ct = usage.get("completion_tokens")
+                    tt = usage.get("total_tokens")
+
+                    pt_i = int(pt) if isinstance(pt, int) else None
+                    ct_i = int(ct) if isinstance(ct, int) else None
+                    tt_i = int(tt) if isinstance(tt, int) else None
+                    if tt_i is None and (pt_i is not None or ct_i is not None):
+                        tt_i = (pt_i or 0) + (ct_i or 0)
+
+                    if pt_i is not None or ct_i is not None or tt_i is not None:
+                        stats["calls_with_tokens"] += 1
+                        if pt_i is not None:
+                            stats["prompt_tokens_total"] += pt_i
+                        if ct_i is not None:
+                            stats["completion_tokens_total"] += ct_i
+                        if tt_i is not None:
+                            stats["total_tokens_total"] += tt_i
 
                 phase = None
                 req = row.get("request") or {}
@@ -319,6 +345,9 @@ def _collect_llm_stats(log_dir):
         stats["latency_ms_avg"] = sum(latencies_sorted) / len(latencies_sorted)
         idx = int(round(0.95 * (len(latencies_sorted) - 1)))
         stats["latency_ms_p95"] = latencies_sorted[max(0, min(idx, len(latencies_sorted) - 1))]
+
+    if stats["calls_with_tokens"]:
+        stats["total_tokens_avg"] = stats["total_tokens_total"] / stats["calls_with_tokens"]
 
     return stats
 
@@ -602,6 +631,11 @@ if __name__ == "__main__":
         "llm_errors_total",
         "llm_latency_ms_avg",
         "llm_latency_ms_p95",
+        "llm_prompt_tokens_total",
+        "llm_completion_tokens_total",
+        "llm_total_tokens_total",
+        "llm_calls_with_tokens",
+        "llm_total_tokens_avg",
         "llm_invalid_output",
         "llm_illegal_move",
         "llm_no_valid_actions",
@@ -640,6 +674,13 @@ if __name__ == "__main__":
         llm_stats.get("errors_total", ""),
         f"{llm_stats.get('latency_ms_avg'):.2f}" if llm_stats.get("latency_ms_avg") is not None else "",
         llm_stats.get("latency_ms_p95", ""),
+        llm_stats.get("prompt_tokens_total", "") if llm_stats.get("calls_with_tokens") else "",
+        llm_stats.get("completion_tokens_total", "") if llm_stats.get("calls_with_tokens") else "",
+        llm_stats.get("total_tokens_total", "") if llm_stats.get("calls_with_tokens") else "",
+        llm_stats.get("calls_with_tokens", "") if llm_stats.get("calls_with_tokens") else "",
+        f"{llm_stats.get('total_tokens_avg'):.2f}"
+        if llm_stats.get("total_tokens_avg") is not None
+        else "",
         llm_stats.get("invalid_output", ""),
         llm_stats.get("illegal_move", ""),
         llm_stats.get("no_valid_actions", ""),
